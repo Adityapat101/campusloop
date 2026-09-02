@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A student marketplace Spring Boot prototype">
+  <title>CampusLoop — student marketplace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="CampusLoop home">
+      <span class="brand-mark">C</span>
+      <span>CampusLoop</span>
+    </a>
+    <nav>
+      <a href="#market">Browse</a>
+      <button class="button button-dark" id="open-sell">Sell an item</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Buy nearby. Waste less.</p>
+        <h1>Good finds,<br><em>still on campus.</em></h1>
+        <p class="lede">Books, dorm essentials, and tech from students you can meet around the corner.</p>
+        <a href="#market" class="button button-accent">Explore listings <span>→</span></a>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="orbit orbit-one"></div>
+        <div class="orbit orbit-two"></div>
+        <div class="hero-card card-book"><span>CALCULUS</span><strong>∫</strong></div>
+        <div class="hero-card card-lamp"><span class="lamp-head"></span><span class="lamp-arm"></span></div>
+        <div class="hero-card card-calc"><span>84+</span><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="spark spark-one">✦</div>
+        <div class="spark spark-two">✦</div>
+      </div>
+    </section>
+
+    <section class="market" id="market">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Fresh on the loop</p>
+          <h2>Find your next useful thing.</h2>
+        </div>
+        <p id="result-count" class="result-count">Loading listings…</p>
+      </div>
+
+      <div class="filters" aria-label="Filter listings">
+        <label class="search">
+          <span>⌕</span>
+          <input id="search" type="search" placeholder="Search books, lamps, calculators…">
+        </label>
+        <div class="category-list" id="categories">
+          <button class="chip active" data-category="">All</button>
+          <button class="chip" data-category="Books">Books</button>
+          <button class="chip" data-category="Dorm">Dorm</button>
+          <button class="chip" data-category="Electronics">Tech</button>
+          <button class="chip" data-category="Clothing">Clothing</button>
+          <button class="chip" data-category="Other">Other</button>
+        </div>
+      </div>
+
+      <div id="notice" class="notice" role="status" hidden></div>
+      <div id="listings" class="listing-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <dialog id="sell-dialog">
+    <form id="sell-form" method="dialog">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">Pass it forward</p>
+          <h2>List an item</h2>
+        </div>
+        <button type="button" class="icon-button" id="close-sell" aria-label="Close">×</button>
+      </div>
+      <label>Seller <select name="sellerId" id="seller" required></select></label>
+      <label>Title <input name="title" maxlength="120" required placeholder="Organic Chemistry textbook"></label>
+      <label>Description <textarea name="description" maxlength="2000" required placeholder="Edition, wear, and pickup details"></textarea></label>
+      <div class="form-row">
+        <label>Category <select name="category" required><option>Books</option><option>Dorm</option><option>Electronics</option><option>Clothing</option><option>Other</option></select></label>
+        <label>Condition <select name="condition" required><option value="NEW">New</option><option value="LIKE_NEW">Like new</option><option value="GOOD">Good</option><option value="FAIR">Fair</option></select></label>
+      </div>
+      <label>Price <span class="money-input"><span>$</span><input name="price" type="number" min="0.01" step="0.01" required placeholder="20.00"></span></label>
+      <button class="button button-accent submit" type="submit">Publish listing <span>→</span></button>
+    </form>
+  </dialog>
+
+  <footer>
+    <span class="brand"><span class="brand-mark">C</span> CampusLoop</span>
+    <p>A learning prototype powered by Spring Boot, PostgreSQL, and MongoDB.</p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
