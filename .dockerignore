@@ -1,0 +1,9 @@
+.git
+.vercel
+.env
+.env.*
+target
+node_modules
+README.md
+LEARNING_GUIDE.md
+HELP.md

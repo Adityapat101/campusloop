@@ -2,6 +2,18 @@
 
 CampusLoop is a runnable full-stack learning prototype for a campus resale marketplace. Students can browse and search available items, publish listings, and complete a demo purchase. The same Spring Boot process serves the browser interface and the JSON API. PostgreSQL stores relational users and purchase orders; MongoDB stores marketplace listing documents.
 
+## Vercel deployment configuration (October 3, 2026)
+
+`Dockerfile.vercel` builds and tests the original Java 21 application, then runs its executable Spring Boot JAR as a non-root user. `vercel.json` explicitly selects that container service and routes requests to it. Vercel's Container Images beta supports this deployment; there is no JavaScript replacement backend. The same Java process serves the UI and API. See [Vercel Container Images](https://vercel.com/docs/functions/container-images).
+
+The container enables the `production` profile. Set `PORT=8080` in Vercel. Connect a dedicated Neon Postgres resource to supply `POSTGRES_HOST`, `POSTGRES_DATABASE`, `POSTGRES_USER`, and `POSTGRES_PASSWORD`; `PGHOST_UNPOOLED` is used when available. The profile constructs a JDBC connection with TLS and limits each instance to three Postgres connections. Connect the dedicated MongoDB Atlas resource to supply `MONGODB_URI`; the cloud profile explicitly uses the `campusloop` MongoDB database. Keep credentials in Vercel environment variables, never in Git. The existing local `scripts/dev.sh` workflow retains its original Docker Compose databases.
+
+The cloud profile hides Actuator connection details and internal error messages, and allows graceful shutdown. `.gitignore`, `.dockerignore`, and `.vercelignore` exclude environment files and local build artifacts.
+
+The public UI clearly labels demo purchases, selects a demo buyer other than the listing's seller, and disables Publish while its request is pending. This remains a learning prototype with shared demo identities, without authentication or payment processing; it is not a real-money marketplace.
+
+Validation before release: run `bash scripts/test.sh`, check the Vercel build, then verify `/actuator/health`, browsing, search, publication, purchase, duplicate-purchase rejection, and persistence after restart. A successful build alone does not establish a working deployment.
+
 This document is deliberately detailed. It explains what every maintained project file does, how the files call one another, how data crosses the browser/server/database boundaries, what can fail, and how to discuss the design under interview pressure.
 
 > Repository facts in this README were verified against the source on September 1, 2026. Current-practice notes and interview questions were checked against the official documentation linked in [Official research references](#official-research-references-checked-september-1-2026).
@@ -34,7 +46,7 @@ The browser can:
 - Search listing titles and descriptions.
 - Filter by Books, Dorm, Electronics, Clothing, or Other.
 - Open a modal form and publish a validated listing.
-- Buy an item as the second demo user.
+- Buy an item as a demo user other than its seller.
 - Display success and server-error notices without reloading the page.
 
 The server can:
@@ -756,7 +768,7 @@ This is idempotent enough for a local demo, not a general migration system. Titl
 
 The service calls `users.existsById`, then `listings.findById`, compares seller and buyer, builds a Mongo `Query` requiring both ID and `AVAILABLE`, and calls `mongo.findAndModify` with an update to `SOLD` and `returnNew(true)`. A null result becomes 409. A successful result supplies the authoritative ID and price for a new `PurchaseOrder`, which `orders.save` inserts in PostgreSQL. The controller returns 201; JavaScript shows a notice and reloads listings, so the sold document disappears from the available query.
 
-**Grill follow-up:** The browser's second demo user selection is only demo behavior. It is not authentication and must never determine real identity.
+**Grill follow-up:** The browser's demo buyer selection is only demo behavior. It is not authentication and must never determine real identity.
 
 ### 22. Why would a read-then-save implementation allow double purchasing?
 

@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Deployment secrets and generated output ###
+.env
+.env.*
+!.env.example
+.vercel/
+node_modules/
+.vercel
+.env*

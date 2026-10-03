@@ -65,7 +65,7 @@ function listingCard(listing) {
       <p>${escapeHtml(listing.description)}</p>
       <div class="listing-bottom">
         <span class="condition">${listing.condition.replaceAll("_", " ").toLowerCase()}</span>
-        <button class="buy" data-listing="${listing.id}">Buy it →</button>
+        <button class="buy" data-listing="${escapeHtml(listing.id)}" data-seller="${escapeHtml(listing.sellerId)}">Try demo purchase →</button>
       </div>
     </article>`;
 }
@@ -91,14 +91,15 @@ document.querySelector("#search").addEventListener("input", event => {
 listingsElement.addEventListener("click", async event => {
   const button = event.target.closest(".buy");
   if (!button) return;
-  if (state.users.length < 2) return showNotice("Create a second demo user before buying.", true);
+  const buyer = state.users.find(user => user.id !== button.dataset.seller);
+  if (!buyer) return showNotice("Demo users are still loading. Please try again shortly.", true);
   button.disabled = true;
   try {
     await api("/api/orders", {
       method: "POST",
-      body: JSON.stringify({ buyerId: state.users[1].id, listingId: button.dataset.listing })
+      body: JSON.stringify({ buyerId: buyer.id, listingId: button.dataset.listing })
     });
-    showNotice("Sold! The demo purchase was recorded in PostgreSQL.");
+    showNotice("Demo purchase recorded. No payment was taken.");
     await loadListings();
   } catch (error) {
     showNotice(error.message, true);
@@ -113,6 +114,8 @@ form.addEventListener("submit", async event => {
   event.preventDefault();
   const values = Object.fromEntries(new FormData(form));
   values.price = Number(values.price);
+  const submitButton = form.querySelector('[type="submit"]');
+  submitButton.disabled = true;
   try {
     await api("/api/listings", { method: "POST", body: JSON.stringify(values) });
     form.reset();
@@ -121,6 +124,8 @@ form.addEventListener("submit", async event => {
     await loadListings();
   } catch (error) {
     showNotice(error.message, true);
+  } finally {
+    submitButton.disabled = false;
   }
 });
 
