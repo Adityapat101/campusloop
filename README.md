@@ -2,7 +2,9 @@
 
 CampusLoop is a runnable full-stack learning prototype for a campus resale marketplace. Students can browse and search available items, publish listings, and complete a demo purchase. The same Spring Boot process serves the browser interface and the JSON API. PostgreSQL stores relational users and purchase orders; MongoDB stores marketplace listing documents.
 
-## Vercel deployment configuration (October 3, 2026)
+## Vercel deployment configuration (verified October 14, 2026)
+
+Live demo: **https://campusloop-two.vercel.app/**
 
 `Dockerfile.vercel` builds and tests the original Java 21 application, then runs its executable Spring Boot JAR as a non-root user. `vercel.json` explicitly selects that container service and routes requests to it. Vercel's Container Images beta supports this deployment; there is no JavaScript replacement backend. The same Java process serves the UI and API. See [Vercel Container Images](https://vercel.com/docs/functions/container-images).
 
@@ -17,6 +19,17 @@ Demo seeding supports concurrent container starts: a PostgreSQL unique-email rac
 The public UI clearly labels demo purchases, selects a demo buyer other than the listing's seller, and disables Publish while its request is pending. This remains a learning prototype with shared demo identities, without authentication or payment processing; it is not a real-money marketplace.
 
 Validation before release: run `bash scripts/test.sh`, check the Vercel build, then verify `/actuator/health`, browsing, search, publication, purchase, duplicate-purchase rejection, and persistence after restart. A successful build alone does not establish a working deployment.
+
+Verified on October 14, 2026: all nine Java tests passed locally and in Vercel's container build; the public health endpoint returned HTTP 200 with status UP. Browser search/filtering, publication, and a demo purchase worked. The API rejected self-purchases and duplicate purchases with HTTP 409. The test listing remained SOLD and its PostgreSQL order remained saved after deploying a new container. The public alias points to deployment `dpl_2kHU1wqCNYTCZPYrQ7jymBrGUj5F`, built from app commit `a5bbd68` on `codex/vercel-deployment`.
+
+For a future release from this branch, deploy and assign the stable public alias:
+
+```bash
+vercel deploy --prod
+vercel alias set <the-new-deployment-url> campusloop-two.vercel.app
+```
+
+An idle container can take about 20 seconds to start on its first request. The app and databases are hosted in the cloud and do not depend on the Mac remaining awake.
 
 This document is deliberately detailed. It explains what every maintained project file does, how the files call one another, how data crosses the browser/server/database boundaries, what can fail, and how to discuss the design under interview pressure.
 
