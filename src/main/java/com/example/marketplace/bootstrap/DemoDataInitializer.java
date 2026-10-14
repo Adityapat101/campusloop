@@ -1,6 +1,7 @@
 package com.example.marketplace.bootstrap;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,6 +11,11 @@ import com.example.marketplace.listing.ListingRepository;
 import com.example.marketplace.user.UserAccount;
 import com.example.marketplace.user.UserRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -64,24 +70,53 @@ public class DemoDataInitializer implements CommandLineRunner {
 
     private final UserRepository users;
     private final ListingRepository listings;
+    private final MongoTemplate mongo;
 
-    public DemoDataInitializer(UserRepository users, ListingRepository listings) {
+    public DemoDataInitializer(UserRepository users, ListingRepository listings, MongoTemplate mongo) {
         this.users = users;
         this.listings = listings;
+        this.mongo = mongo;
     }
 
     @Override
     public void run(String... args) {
-        UserAccount maya = users.findByEmailIgnoreCase("maya@campus.edu")
-                .orElseGet(() -> users.save(new UserAccount("Maya Chen", "maya@campus.edu", "North Campus")));
-        if (!users.existsByEmailIgnoreCase("noah@campus.edu")) {
-            users.save(new UserAccount("Noah Williams", "noah@campus.edu", "South Campus"));
-        }
+        UserAccount maya = ensureUser("Maya Chen", "maya@campus.edu", "North Campus");
+        ensureUser("Noah Williams", "noah@campus.edu", "South Campus");
 
         DEMO_LISTINGS.stream()
                 .filter(demo -> !listings.existsByTitleIgnoreCase(demo.title()))
-                .map(demo -> demo.toListing(maya.getId()))
-                .forEach(listings::save);
+                .forEach(demo -> insertMissingListing(demo, maya.getId()));
+    }
+
+    private UserAccount ensureUser(String name, String email, String campus) {
+        return users.findByEmailIgnoreCase(email).orElseGet(() -> {
+            try {
+                return users.saveAndFlush(new UserAccount(name, email, campus));
+            } catch (DataIntegrityViolationException exception) {
+                // Another instance may have committed this demo user after our initial read.
+                // The repository transaction has ended, so reread the winner in a fresh transaction.
+                return users.findByEmailIgnoreCase(email).orElseThrow(() -> exception);
+            }
+        });
+    }
+
+    private void insertMissingListing(DemoListing demo, UUID sellerId) {
+        Listing listing = demo.toListing(sellerId);
+        String seedId = UUID.nameUUIDFromBytes(
+                ("campusloop:demo-listing:" + demo.title()).getBytes(StandardCharsets.UTF_8)).toString();
+        // A shared _id makes concurrent cold starts target the same document. Insert-only
+        // updates also leave an already-sold seed untouched if our title check was stale.
+        mongo.upsert(Query.query(Criteria.where("id").is(seedId)),
+                new Update()
+                        .setOnInsert("sellerId", listing.getSellerId())
+                        .setOnInsert("title", listing.getTitle())
+                        .setOnInsert("description", listing.getDescription())
+                        .setOnInsert("category", listing.getCategory())
+                        .setOnInsert("price", listing.getPrice())
+                        .setOnInsert("condition", listing.getCondition())
+                        .setOnInsert("status", listing.getStatus())
+                        .setOnInsert("createdAt", listing.getCreatedAt()),
+                Listing.class);
     }
 
     private record DemoListing(String title, String description, String category,

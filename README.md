@@ -10,6 +10,10 @@ The container enables the `production` profile. Set `PORT=8080` in Vercel. Conne
 
 The cloud profile hides Actuator connection details and internal error messages, and allows graceful shutdown. `.gitignore`, `.dockerignore`, and `.vercelignore` exclude environment files and local build artifacts.
 
+`HostedMongoHealthIndicator` replaces the production Mongo health check with a ping of the configured application database. Spring Boot 4.1.0's default indicator enumerates all databases and attempts `hello` on Atlas's restricted `local` database, which can return a false DOWN status while listing operations succeed. The replacement still reports DOWN when MongoDB is unavailable or rejects the ping. See [MongoDB ping](https://www.mongodb.com/docs/manual/reference/command/ping/).
+
+Demo seeding supports concurrent container starts: a PostgreSQL unique-email race rereads the already-created user, and MongoDB seed listings use deterministic IDs with insert-only upserts. Existing listings, including sold items, are retained.
+
 The public UI clearly labels demo purchases, selects a demo buyer other than the listing's seller, and disables Publish while its request is pending. This remains a learning prototype with shared demo identities, without authentication or payment processing; it is not a real-money marketplace.
 
 Validation before release: run `bash scripts/test.sh`, check the Vercel build, then verify `/actuator/health`, browsing, search, publication, purchase, duplicate-purchase rejection, and persistence after restart. A successful build alone does not establish a working deployment.
