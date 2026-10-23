@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A student marketplace Spring Boot prototype">
+  <meta name="description" content="Discover books, dorm essentials, and tech on CampusLoop, a student resale marketplace.">
   <title>CampusLoop — student marketplace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,7 +28,6 @@
         <p class="eyebrow">Buy nearby. Waste less.</p>
         <h1>Good finds,<br><em>still on campus.</em></h1>
         <p class="lede">Books, dorm essentials, and tech from students you can meet around the corner.</p>
-        <p class="demo-note">Interactive project demo. Sample students and listings; purchases do not charge money.</p>
         <a href="#market" class="button button-accent">Explore listings <span>→</span></a>
       </div>
       <div class="hero-art" aria-hidden="true">
@@ -80,7 +79,9 @@
         </div>
         <button type="button" class="icon-button" id="close-sell" aria-label="Close">×</button>
       </div>
-      <label>Demo seller <select name="sellerId" id="seller" required></select></label>
+      <p id="sell-error" class="notice error" role="alert" hidden></p>
+      <label>Your name <input name="profileName" id="profile-name" required maxlength="100" autocomplete="name"></label>
+      <label>University <select name="campus" id="profile-campus" required disabled><option value="" disabled selected>Loading universities…</option></select></label>
       <label>Title <input name="title" maxlength="120" required placeholder="Organic Chemistry textbook"></label>
       <label>Description <textarea name="description" maxlength="2000" required placeholder="Edition, wear, and pickup details"></textarea></label>
       <div class="form-row">
@@ -88,15 +89,15 @@
         <label>Condition <select name="condition" required><option value="NEW">New</option><option value="LIKE_NEW">Like new</option><option value="GOOD">Good</option><option value="FAIR">Fair</option></select></label>
       </div>
       <label>Price <span class="money-input"><span>$</span><input name="price" type="number" min="0.01" step="0.01" required placeholder="20.00"></span></label>
-      <button class="button button-accent submit" type="submit">Publish listing <span>→</span></button>
+      <button class="button button-accent submit" type="submit" disabled>Publish listing <span>→</span></button>
     </form>
   </dialog>
 
   <footer>
     <span class="brand"><span class="brand-mark">C</span> CampusLoop</span>
-    <p>A learning prototype powered by Spring Boot, PostgreSQL, and MongoDB.</p>
+    <p>Purchases record item availability. No payments are processed.</p>
   </footer>
 
-  <script src="/app.js"></script>
+  <script type="module" src="/app.js"></script>
 </body>
 </html>

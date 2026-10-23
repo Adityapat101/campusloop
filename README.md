@@ -2,9 +2,17 @@
 
 CampusLoop is a runnable full-stack learning prototype for a campus resale marketplace. Students can browse and search available items, publish listings, and complete a demo purchase. The same Spring Boot process serves the browser interface and the JSON API. PostgreSQL stores relational users and purchase orders; MongoDB stores marketplace listing documents.
 
-## Vercel deployment configuration (verified October 14, 2026)
+## University dropdown data
 
-Live demo: **https://campusloop-two.vercel.app/**
+The native university dropdown uses a bundled United States subset of [Hipo's University Domains and Names Data List](https://github.com/Hipo/university-domains-list). [`src/main/resources/static/universities.json`](src/main/resources/static/universities.json) contains 2,337 deduplicated university names, sorted alphabetically, downloaded on October 23, 2026 from [`world_universities_and_domains.json`](https://github.com/Hipo/university-domains-list/blob/master/world_universities_and_domains.json). It includes `Purdue University`. This is a community-maintained directory, not an accreditation or student-affiliation check; names can include historical institutions.
+
+The data is MIT licensed, copyright 2014–2025 Hipo. Its full notice is retained in [`universities-LICENSE.txt`](src/main/resources/static/universities-LICENSE.txt). The browser loads the local JSON from CampusLoop rather than contacting a third-party service. To refresh it, download the upstream JSON, keep records with `country` equal to `United States`, trim and deduplicate their `name` values ignoring case, sort them, and replace `universities.json`.
+
+[`universities.js`](src/main/resources/static/universities.js) exports `populateUniversitySelect(select, selected = "")`, an async helper that fills a native scrollable select using text nodes. It restores an exact matching saved university and leaves an empty required prompt otherwise. Publishing stays disabled until the list loads; a loading failure is shown in the listing form.
+
+## Vercel deployment configuration (verified October 23, 2026)
+
+Live website: **https://campusloop-two.vercel.app/**
 
 `Dockerfile.vercel` builds and tests the original Java 21 application, then runs its executable Spring Boot JAR as a non-root user. `vercel.json` explicitly selects that container service and routes requests to it. Vercel's Container Images beta supports this deployment; there is no JavaScript replacement backend. The same Java process serves the UI and API. See [Vercel Container Images](https://vercel.com/docs/functions/container-images).
 
@@ -16,7 +24,15 @@ The cloud profile hides Actuator connection details and internal error messages,
 
 Demo seeding supports concurrent container starts: a PostgreSQL unique-email race rereads the already-created user, and MongoDB seed listings use deterministic IDs with insert-only upserts. Existing listings, including sold items, are retained.
 
-The public UI clearly labels demo purchases, selects a demo buyer other than the listing's seller, and disables Publish while its request is pending. This remains a learning prototype with shared demo identities, without authentication or payment processing; it is not a real-money marketplace.
+The public UI opens a checkout page before recording a purchase and disables Publish while its request is pending. Sellers and buyers enter their own name and campus; `profile.js` creates a PostgreSQL user through `/api/users` and remembers it in the current browser tab. The internal email value is a generated identifier at `campusloop.invalid`, not a contact address. There is no authentication or payment processing; this is not a real-money marketplace.
+
+### Checkout and account balance
+
+Each Buy item link opens `/checkout.html?listing=<listing-id>`. The page shows the item, its price, a starting balance of $100, and the balance after purchase. Buyers enter their name and select their university before the explicit **Yes, pay** confirmation calls `POST /api/orders`. Insufficient balance and sold listings disable confirmation; successful purchases show the actual saved order reference. The interface states that no real money is charged.
+
+The balance and receipts live in `sessionStorage` for the current browser tab. Reloads retain them, and a new tab starts at $100. This is browser UI state, not a funded or server-enforced wallet. `checkout.js` handles the page and existing APIs; `checkout-wallet.js` handles integer-cent calculations and receipt deduplication. Run `node --test tests/checkout-wallet.test.mjs` for the balance checks, alongside the Java tests below.
+
+Verified on October 23, 2026: all nine Java tests and eight checkout balance tests passed. The Vercel production build succeeded, the public health endpoint reported UP, and the deployed UI/static assets matched the source. Browser checks covered creating a named profile, publishing a listing, confirming a purchase, and reducing the balance from $100.00 to $98.77 for a $1.23 item. Both forms load the university dropdown, including Purdue University. Current production deployment: `dpl_EtqUvjVeqSJAhVdmrerBcWHzRtG1`.
 
 Validation before release: run `bash scripts/test.sh`, check the Vercel build, then verify `/actuator/health`, browsing, search, publication, purchase, duplicate-purchase rejection, and persistence after restart. A successful build alone does not establish a working deployment.
 

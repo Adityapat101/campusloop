@@ -1,10 +1,14 @@
-const state = { users: [], category: "", query: "" };
+ import { ensureProfile, getProfile } from "/profile.js";
+import { populateUniversitySelect } from "/universities.js";
+
+const state = { category: "", query: "" };
 
 const listingsElement = document.querySelector("#listings");
 const countElement = document.querySelector("#result-count");
 const noticeElement = document.querySelector("#notice");
 const dialog = document.querySelector("#sell-dialog");
 const form = document.querySelector("#sell-form");
+let universitiesLoaded = false;
 
 function escapeHtml(value) {
   const div = document.createElement("div");
@@ -31,11 +35,11 @@ async function api(path, options = {}) {
   return response.status === 204 ? null : response.json();
 }
 
-async function loadUsers() {
-  state.users = await api("/api/users");
-  document.querySelector("#seller").innerHTML = state.users
-    .map(user => `<option value="${user.id}">${escapeHtml(user.name)} — ${escapeHtml(user.campus)}</option>`)
-    .join("");
+function fillProfile() {
+  const profile = getProfile();
+  if (!profile) return;
+  document.querySelector("#profile-name").value = profile.name;
+  document.querySelector("#profile-campus").value = profile.campus;
 }
 
 async function loadListings() {
@@ -65,7 +69,7 @@ function listingCard(listing) {
       <p>${escapeHtml(listing.description)}</p>
       <div class="listing-bottom">
         <span class="condition">${listing.condition.replaceAll("_", " ").toLowerCase()}</span>
-        <button class="buy" data-listing="${escapeHtml(listing.id)}" data-seller="${escapeHtml(listing.sellerId)}">Try demo purchase →</button>
+        <a class="buy" href="/checkout.html?listing=${encodeURIComponent(listing.id)}">Buy item →</a>
       </div>
     </article>`;
 }
@@ -88,45 +92,55 @@ document.querySelector("#search").addEventListener("input", event => {
   }, 250);
 });
 
-listingsElement.addEventListener("click", async event => {
-  const button = event.target.closest(".buy");
-  if (!button) return;
-  const buyer = state.users.find(user => user.id !== button.dataset.seller);
-  if (!buyer) return showNotice("Demo users are still loading. Please try again shortly.", true);
-  button.disabled = true;
-  try {
-    await api("/api/orders", {
-      method: "POST",
-      body: JSON.stringify({ buyerId: buyer.id, listingId: button.dataset.listing })
-    });
-    showNotice("Demo purchase recorded. No payment was taken.");
-    await loadListings();
-  } catch (error) {
-    showNotice(error.message, true);
-    button.disabled = false;
-  }
+document.querySelector("#open-sell").addEventListener("click", () => {
+  fillProfile();
+  dialog.showModal();
 });
-
-document.querySelector("#open-sell").addEventListener("click", () => dialog.showModal());
 document.querySelector("#close-sell").addEventListener("click", () => dialog.close());
 
 form.addEventListener("submit", async event => {
   event.preventDefault();
+  const formError = document.querySelector("#sell-error");
+  if (!universitiesLoaded) {
+    formError.textContent = "Wait for the university list to load before publishing.";
+    formError.hidden = false;
+    return;
+  }
+  formError.hidden = true;
   const values = Object.fromEntries(new FormData(form));
   values.price = Number(values.price);
   const submitButton = form.querySelector('[type="submit"]');
   submitButton.disabled = true;
   try {
+    const profile = await ensureProfile(values.profileName, values.campus);
+    delete values.profileName;
+    delete values.campus;
+    values.sellerId = profile.id;
     await api("/api/listings", { method: "POST", body: JSON.stringify(values) });
     form.reset();
+    fillProfile();
     dialog.close();
     showNotice("Your listing is live.");
     await loadListings();
   } catch (error) {
+    formError.textContent = error.message;
+    formError.hidden = false;
     showNotice(error.message, true);
   } finally {
-    submitButton.disabled = false;
+    submitButton.disabled = !universitiesLoaded;
   }
 });
 
-Promise.all([loadUsers(), loadListings()]).catch(error => showNotice(error.message, true));
+fillProfile();
+populateUniversitySelect(document.querySelector("#profile-campus"), getProfile()?.campus)
+  .then(() => {
+    universitiesLoaded = true;
+    form.querySelector('[type="submit"]').disabled = false;
+  })
+  .catch(error => {
+    const formError = document.querySelector("#sell-error");
+    formError.textContent = error.message;
+    formError.hidden = false;
+    showNotice(error.message, true);
+  });
+loadListings();

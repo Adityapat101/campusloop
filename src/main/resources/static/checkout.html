@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Review your CampusLoop find and confirm your purchase.">
+  <title>Checkout — CampusLoop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="checkout-page">
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="CampusLoop home"><span class="brand-mark">C</span><span>CampusLoop</span></a>
+    <a class="back-link" href="/#market">← Back to the loop</a>
+  </header>
+  <main class="checkout-main">
+    <div class="checkout-intro" id="checkout-intro">
+      <p class="eyebrow">A good find. A second life.</p>
+      <h1>Make it <em>yours.</em></h1>
+      <p class="lede">One last look before it joins your side of campus.</p>
+    </div>
+    <p id="checkout-loading" class="checkout-loading" role="status">Getting your item ready…</p>
+    <div id="checkout-error" class="notice error" role="alert" hidden></div>
+    <div class="checkout-layout" id="checkout-review" hidden>
+      <section class="checkout-item" aria-labelledby="review-heading">
+        <div class="checkout-item-top"><h2 id="review-heading">Your find</h2><span class="checkout-step">01 / Review</span></div>
+        <div class="item-art" aria-hidden="true"><span class="item-art-loop"></span><span class="item-art-symbol">↗</span><span class="item-art-caption">GOOD FINDS, STILL ON CAMPUS.</span></div>
+        <div class="checkout-item-body">
+          <div class="listing-top"><span id="item-category" class="tag"></span><span id="item-condition" class="condition"></span></div>
+          <h3 id="item-title"></h3>
+          <p id="item-description"></p>
+          <div class="checkout-seller"><span>Listed by</span><strong id="item-seller"></strong></div>
+        </div>
+      </section>
+      <aside class="checkout-payment" aria-labelledby="payment-heading">
+        <p class="checkout-step">02 / Confirm</p>
+        <h2 id="payment-heading">A little less.<br>A lot more useful.</h2>
+        <div class="wallet-balance"><span>Account balance</span><strong id="wallet-balance">$100.00</strong></div>
+        <dl class="checkout-totals">
+          <div><dt>Item price</dt><dd id="item-price"></dd></div>
+          <div><dt>Additional fees</dt><dd>$0.00</dd></div>
+          <div class="checkout-total"><dt>Total</dt><dd id="order-total"></dd></div>
+          <div class="balance-after"><dt>Balance after purchase</dt><dd id="balance-after"></dd></div>
+        </dl>
+        <p class="paying-as">Purchasing as <strong id="buyer-name"></strong></p>
+        <form id="payment-form">
+          <div class="checkout-profile-fields">
+            <label>Your name <input id="checkout-name" name="buyerName" required maxlength="100" autocomplete="name" placeholder="Your full name"></label>
+            <label>University <select id="checkout-campus" name="campus" required disabled><option value="">Choose your university</option></select></label>
+          </div>
+          <p id="confirmation-question" class="confirmation-question"></p>
+          <button class="button button-accent checkout-confirm" id="confirm-payment" type="submit" disabled>Confirm payment <span>→</span></button>
+        </form>
+        <a class="checkout-cancel" href="/#market">Not now, keep browsing</a>
+        <p class="payment-note">No real money is charged.</p>
+      </aside>
+    </div>
+    <section class="checkout-success" id="checkout-success" aria-labelledby="success-heading" hidden>
+      <div class="success-mark" aria-hidden="true">✓</div>
+      <p class="eyebrow">Nice find.</p>
+      <h1 id="success-heading" tabindex="-1">All <em>yours.</em></h1>
+      <p class="lede" id="success-description"></p>
+      <dl class="receipt-details">
+        <div><dt>Purchase amount</dt><dd id="receipt-amount"></dd></div>
+        <div><dt>Remaining balance</dt><dd id="receipt-balance"></dd></div>
+        <div><dt>Order reference</dt><dd id="receipt-id" class="receipt-id"></dd></div>
+      </dl>
+      <p class="payment-note">Your purchase is recorded in CampusLoop. No real money was charged.</p>
+      <a class="button button-accent" href="/#market">Back to the loop <span>→</span></a>
+    </section>
+    <a class="back-link checkout-recovery" id="checkout-recovery" href="/#market" hidden>← Choose another item</a>
+  </main>
+  <footer><span class="brand"><span class="brand-mark">C</span> CampusLoop</span><p>Good finds deserve another go.</p></footer>
+  <script type="module" src="/checkout.js"></script>
+</body>
+</html>
