@@ -11,6 +11,7 @@ import com.example.marketplace.listing.ListingRepository;
 import com.example.marketplace.user.UserAccount;
 import com.example.marketplace.user.UserRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -19,6 +20,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "campusloop.seed.enabled", havingValue = "true", matchIfMissing = true)
 public class DemoDataInitializer implements CommandLineRunner {
 
     private static final List<DemoListing> DEMO_LISTINGS = List.of(

@@ -12,7 +12,7 @@ RUN groupadd --system campusloop && useradd --system --gid campusloop campusloop
 COPY --from=build --chown=campusloop:campusloop /workspace/target/student-marketplace-0.0.1-SNAPSHOT.jar app.jar
 ENV SPRING_PROFILES_ACTIVE=production
 ENV PORT=8080
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=65 -XX:+ExitOnOutOfMemoryError"
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=65 -XX:+ExitOnOutOfMemoryError -XX:TieredStopAtLevel=1"
 USER campusloop
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
